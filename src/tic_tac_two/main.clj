@@ -84,16 +84,18 @@
    a winner. In this implementation of tic-tac-toe, I have used
    scores of 1,0,-1 but sometimes it is seen as 10,0,-10."
   [board player depth]
-  (if (empty? (get-available-moves board))
-    (evaluate-board board player)
-    (let [available-moves (get-available-moves board)
-          scores-and-moves (for [[row col] available-moves]
-                             (let [new-board (make-move board row col player)
-                                   score (minimax new-board (if (= player "X") "O" "X") (dec depth))]
-                               [score [row col]]))]
-      (if (= player "X")
-        (apply max-key first scores-and-moves)
-        (apply min-key first scores-and-moves)))))
+ (if (or (zero? depth) (empty? (get-available-moves board)))
+   [(evaluate-board board player) nil]
+   (let [available-moves (get-available-moves board)
+         scores-and-moves (for [[row col] available-moves]
+                            (let [new-board (make-move board row col player)
+                                  [score _] (minimax new-board
+                                                     (if (= player "X") "O" "X")
+                                                     (dec depth))]
+                              [score [row col]]))]
+     (if (= player "X")
+       (reduce #(if (> (first %1) (first %2)) %1 %2) scores-and-moves)
+       (reduce #(if (< (first %1) (first %2)) %1 %2) scores-and-moves)))))
 
 (defn valid-input? [input]
   (and (not (blank? input)) (some #(= (Integer/parseInt input) %) [0 1 2])))
@@ -136,81 +138,83 @@
                 board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
             (recur board-after-computer-move)))))))
 
-
 (comment
   (defn test-minimax
-  "Helper to test minimax for a given board and player"
-  [board player expected-score expected-move]
-  (let [[score move] (minimax board player 9)]
-    (is (= score expected-score) (str "Expected score " expected-score " but got " score))
-    (is (= move expected-move) (str "Expected move " expected-move " but got " move))))
-    
-       ;; Test 1: Example where "X" is about to win
-    (test-minimax
-      [["X" "O" "X"]
-       [" " "X" " "]
-       ["O" "O" "X"]]
-      "X"
-      1
-      [1 1]) ;; "X" will win by placing at (1, 1)
-    
-    ;; Test 2: Example where "O" is about to win
-    (test-minimax
-      [["X" " " " "]
-       ["X" "O" "O"]
-       ["O" "X" " "]]
-      "X"
-      -1
-      [0 1]) ;; "X" needs to block "O" by placing at (0, 1)
-    
-    ;; Test 3: A draw situation (no winner)
-    (test-minimax
-      [["X" "O" "X"]
-       ["O" "X" "O"]
-       ["O" "X" "O"]]
-      "X"
-      0
-      [0 1]) ;; No moves left, but score is 0 since it's a draw
+    "Helper to test minimax for a given board and player"
+    [board player expected-score expected-move]
+    (let [[score move] (minimax board player 9)]
+      (is (= score expected-score) (str "Expected score " expected-score " but got " score))
+      (is (= move expected-move) (str "Expected move " expected-move " but got " move))))
 
-    ;; Test 4: Edge case: Board with one move left (draw)
-    (test-minimax
-      [["X" "O" "X"]
-       ["O" "X" "O"]
-       ["O" "X" " "]]
-      "X"
-      0
-      [2 2]) ;; It's a draw but "X" plays the last move
-    
-    ;; Test 5: Edge case: Player "X" must block opponent from winning
-    (test-minimax
-      [["X" "O" " "]
-       ["X" "O" " "]
-       [" " "O" " "]]
-      "X"
-      0
-      [2 0]) ;; "X" blocks "O" at (2, 0)
-    
-    ;; Test 6: Player "O" has a forced win
-    (test-minimax
-      [["X" "O" "X"]
-       ["X" "O" " "]
-       ["O" "X" " "]]
-      "O"
-      1
-      [2 2]) ;; "O" wins by placing at (2, 2)
-  
+       ;Test 1: Example where "X" is about to win
+  (test-minimax
+   [["X" "O" "X"]
+    [" " "X" " "]
+    ["O" "O" "X"]]
+   "X"
+   1
+   [1 1])
+	  ;"X" will win by placing at (1, 1)
+
+    ;Test 2: Example where "O" is about to win
+  (test-minimax
+   [["X" " " " "]
+    ["X" "O" "O"]
+    ["O" "X" " "]]
+   "X"
+   -1
+   [0 1])
+	  ;"X" needs to block "O" by placing at (0, 1)
+
+    ;Test 3: A draw situation (no winner)
+  (test-minimax
+   [["X" "O" "X"]
+    ["O" "X" "O"]
+    ["O" "X" "O"]]
+   "X"
+   0
+   [0 1])
+	  ;No moves left, but score is 0 since it's a draw
+
+    ;Test 4: Edge case: Board with one move left (draw)
+  (test-minimax
+   [["X" "O" "X"]
+    ["O" "X" "O"]
+    ["O" "X" " "]]
+   "X"
+   0
+   [2 2])
+	  ;It's a draw but "X" plays the last move
+
+    ;Test 5: Edge case: Player "X" must block opponent from winning
+  (test-minimax
+   [["X" "O" " "]
+    ["X" "O" " "]
+    [" " "O" " "]]
+   "X"
+   0
+   [2 0])
+	  ;"X" blocks "O" at (2, 0)
+
+    ;Test 6: Player "O" has a forced win
+  (test-minimax
+   [["X" "O" "X"]
+    ["X" "O" " "]
+    ["O" "X" " "]]
+   "O"
+   1
+   [2 2])
+	  ;"O" wins by placing at (2, 2)
+
   (testing "Minimax with invalid moves"
-    ;; Test: No moves left (game over)
+    ;Test: No moves left (game over)
     (test-minimax
-      [["X" "O" "X"]
-       ["O" "X" "O"]
-       ["O" "X" "O"]]
-      "X"
-      0
-      [0 0])) ;; No available moves, score is 0 because of a draw
-  
-  ;; Test cases for ensuring "X" maximizes and "O" minimizes
-  ;; These should already be covered in the above tests.
+     [["X" "O" "X"]
+      ["O" "X" "O"]
+      ["O" "X" "O"]]
+     "X"
+     0
+     [0 0]))
+	  ;No available moves, score is 0 because of a draw
 
-(run-tests) 
-    )
+  (run-tests))
