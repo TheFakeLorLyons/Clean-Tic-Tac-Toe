@@ -1,0 +1,14 @@
+.idea/
+.calva/
+.lsp/
+target/
+.nrepl*
+.cpcache
+.clj-kondo/
+.shadow-cljs/
+.cache
+test-out/
+.vscode/
+.out/
+/node_modules/
+/resources/public/js
