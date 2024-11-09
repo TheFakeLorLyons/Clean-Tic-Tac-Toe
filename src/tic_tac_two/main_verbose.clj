@@ -1,4 +1,9 @@
-(ns tic-tac-two.main
+;A straightforward and "clean" implementation of
+;Tic-Tac-Toe
+;Lorelai Lyons
+;This file is a copy of the main file but commented for extra detail.
+
+(ns tic-tac-two.main-verbose
   (:require [clojure.string :refer [blank?]]
             [tic-tac-two.console :as console]))
 
@@ -11,6 +16,10 @@
   (clojure.string/blank? (get-in board [row col])))
 
 (defn check-winner
+  "This part of the algorithm reviews the state of the board, iterating through
+    all rows, and finally the diagnal axis of the board, determining whether 
+    there are any filled lines across any one of 8 axis. If so it will return
+    that particular array or nil"
   [board]
   (let [diag1 [(get-in board [0 0]) (get-in board [1 1]) (get-in board [2 2])]
         diag2 [(get-in board [0 2]) (get-in board [1 1]) (get-in board [2 0])]
@@ -24,6 +33,8 @@
           all-lines)))
 
 (defn make-move
+  "Make-move functions by taking appropriate symbol ('X' or 'O') into the 
+    appropriate spot in the state vectors for both the player and computer."
   [board row col player]
   (if (legal-move? row col board)
    (assoc-in board [row col] player)
@@ -32,6 +43,8 @@
      board)))
 
 (defn get-available-moves
+  "Iterate through the 'open' board positions and return a destructured array
+    of available positions based on their grid coordinates."
   [board-state]
   (->> (for [row (range (count board-state))
              col (range (count (first board-state)))]
@@ -40,6 +53,9 @@
        (remove nil?)))
 
 (defn evaluate-board
+  "This function applies a score to the potential move being evaluated. A score
+    of 0 inevitably continues the game and will lead to an updated board state,
+    while a 1 or -1 signal the end of the game."
   [board player]
   (cond
     (= (check-winner board) player) 1
@@ -48,6 +64,10 @@
     :else 0))
 
 (defn minimax
+  "Minimax is a recursive algorithm that assesses a current board-state, and
+    applies scores of either nil to each one (location),indicating the game will 
+    progress, or otherwise declaring a winner. If a score 1 or -1 is returned,
+    a position is not returned."
   [board player depth]
   (let [winner (check-winner board)]
    (if (or (zero? depth)
@@ -81,6 +101,13 @@
           (recur))))))
 
 (defn play-game
+  "This is the main game loop. Since the program is optimized/unlosable for the
+    computer, technically only a draw or a loss may occur, but not by design - 
+    rather the algorithm ensures that the computer plays 'optimally' so 
+    theoretically the player actually could win; but the algorithm ensures at 
+    least a draw as long as the computer follows the code without unforeseen 
+    error. Accompanied are tests, and any further testing is welcome and I can 
+    provide further testing upon request."
   [player-name stats]
   (loop [current-board board-state
          moves-made 0
@@ -120,6 +147,10 @@
                     (recur board-after-computer-move (+ moves-made 2) current-stats)))))))))))
 
 (defn -main
+    "The entry point to the program. It first prints a heading and then takes
+      user input simply for their name. After welcoming the player, it will
+      invoke the main game loop. The game will exit and print the final stats
+      when the player has chosen not to continue playing."
   []
   (console/print-heading) 
   (let [player-name (read-line)
