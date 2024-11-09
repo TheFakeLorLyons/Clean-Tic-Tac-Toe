@@ -3,21 +3,17 @@
 ;Lorelai Lyons
 
 (ns tic-tac-two.main
-  (:require [clojure.string :refer [blank?]]))
+  (:require [clojure.string :refer [blank?]]
+            [tic-tac-two.console :as console]))
 
 (def board-state
   [[" " " " " "]
    [" " " " " "]
    [" " " " " "]])
 
-(defn print-board [board]
-  (doseq [row board]
-    (println (clojure.string/join " | " (map #(or % " ") row)))))
-
-(defn print-heading []
-  (println (str " ======================\n") 
-                 "Lor's Tic-Tac-Toe Game\n"
-                 "======================\n"))
+(defn reset-game []
+  {:board [[" " " " " "] [" " " " " "] [" " " " " "]]
+   :moves-made 0})
 
 (defn legal-move? [row col board]
   (clojure.string/blank? (get-in board [row col])))
@@ -114,53 +110,27 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
-(defn print-stats [stats]
-  (println "\nCurrent Stats:")
-  (println (str "Wins: " (:wins stats)))
-  (println (str "Losses: " (:losses stats)))
-  (println (str "Draws: " (:draws stats)))
-  (println (str "Win Rate: "
-                (if (zero? (+ (:wins stats) (:losses stats) (:draws stats)))
-                      "0.0"
-                      (format "%.1f" (* 100.0 (/ (float (:wins stats))
-                                                 (+ (float (:wins stats))
-                                                    (float (:losses stats))
-                                                    (float (:draws stats))))))))
-                   "%\n"))
-
-  (defn play-again? []
-    (println "\nWould you like to play again? (yes/no)")
-    (let [response (read-line)]
-      (contains? #{"y" "yes"} response)))
-
-  (defn update-stats [stats result]
-    (case result
-      :win (update stats :wins inc)
-      :loss (update stats :losses inc)
-      :draw (update stats :draws inc)))
-
-  
 (defn play-game [player-name stats]
   (loop [current-board board-state
          moves-made 0
          current-stats stats]
-    (print-board current-board)
+    (console/print-board current-board)
     (let [winner (check-winner current-board)]
       (cond
         winner
         (let [is-player-win? (= winner "X")
-              new-stats (update-stats current-stats (if is-player-win? :win :loss))]
-          (println (str "Player " (if is-player-win? player-name "Computer") " wins!"))
-          (print-stats new-stats)
-          (if (play-again?)
+              new-stats (console/update-stats current-stats (if is-player-win? :win :loss))]
+          (console/print-draw-or-computer-win false is-player-win? player-name)
+          (console/print-stats new-stats 0)
+          (if (console/play-again?)
             (recur board-state 0 new-stats)
             new-stats))
 
         (>= moves-made 9)
-        (let [new-stats (update-stats current-stats :draw)]
-          (println "Game ends in a draw!")
-          (print-stats new-stats)
-          (if (play-again?)
+        (let [new-stats (console/update-stats current-stats :draw)]
+          (console/print-draw-or-computer-win true false player-name)
+          (console/print-stats new-stats 0)
+          (if (console/play-again?)
             (recur board-state 0 new-stats)
             new-stats))
 
@@ -181,12 +151,9 @@
 
 (defn -main
   []
-  (print-heading)
-  (println "  Enter your REAL name")
+  (console/print-heading) 
   (let [player-name (read-line)
-        initial-stats {:wins 0 :losses 0 :draws 0}]
-    (println (str "Okay " player-name ", welcome to the game!"))
-    (let [final-stats (play-game player-name initial-stats)]
-      (println "\nThanks for playing!")
-      (println "Final Stats:")
-      (print-stats final-stats))))
+        initial-stats {:wins 0 :losses 0 :draws 0}
+        _ (println (str "Okay " player-name ", welcome to the game!"))
+        final-stats (play-game player-name initial-stats)]
+      (console/print-stats final-stats 1)))
