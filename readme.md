@@ -1,10 +1,10 @@
-Project Description
+## __Project Description__
 
 Goal: Make a Tic-Tac-Toe console application in any programming language I desire.
 
 This project is designed to demonstrate the implementation of Tic-Tac-Toe as a console-based game in Clojure, with features such as player vs. computer gameplay, move validation, and statistics tracking.
 
-**MVP Goals**
+#### __MVP Goals__
   
 The minimum viable product (MVP) for this project includes the following features:
 
@@ -18,7 +18,7 @@ The minimum viable product (MVP) for this project includes the following feature
 
     Game replay option: After each game, players can choose to play again. Statistics for the matches are saved in local storage and the user is provided a running tally of their current statistics.
 
-**Stretch Goals**
+#### __Stretch Goals__
 
     ✅Game replay option: After each game, players can choose to play again. Statistics for the matches are saved in local storage and the user is provided a running tally of their current statistics.
 
@@ -28,7 +28,7 @@ The minimum viable product (MVP) for this project includes the following feature
     
     SPA (Single Page Web Application): It would be nice to jump from a console application to a web browser and have an ineractive user interface to play the game through. If I was to expand this application I would use Helix CLJS to display the front end on the browser.
   
-How to Play
+#### __How to Play__
 
     Start the Game: Run the application in your console.
 
@@ -38,7 +38,7 @@ How to Play
 
     Replay: After each game, you will be asked if you want to play again. Type "yes" to play another round or "no" to exit the game.
 
-**Technologies Used**
+#### __Technologies Used__
 
     Clojure: The programming language used to build this application. Clojure is a functional, general-purpose language that runs on the Java Virtual Machine (JVM).
 
@@ -48,7 +48,7 @@ How to Play
 
       Clojure.Test: I used the core clojure testing library to include some basic test cases for all of my functions.
 
-Installation
+#### __Installation__
 
     Ensure you have Clojure installed on your machine. You can follow the official installation guide.
 
@@ -64,10 +64,10 @@ Run the game using:
 
     This will start the Tic-Tac-Toe game in your terminal.
 
-Other Potential Future Improvements
+##### __Other Potential Future Improvements__
 
     Multiplayer: Extend the game to support network play where players can play from different machines.
 
     Game Logging: Implement logging to track all moves and decisions made during each game session for future analysis.
 
-Thanks for checking out my application!
+###### Thanks for checking out my application!
