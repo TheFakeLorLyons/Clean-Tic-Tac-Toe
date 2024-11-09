@@ -66,9 +66,9 @@
 
 (defn evaluate-board
   "This function applies a score to the potential move
-  being evaluated. A score of 0 inevitably continues
-  the game and will lead to an updated board state,
-  while a 1 or -1 signal the end of the game."
+   being evaluated. A score of 0 inevitably continues
+   the game and will lead to an updated board state,
+   while a 1 or -1 signal the end of the game."
   [board player]
   (cond
     (= (check-winner board) player) 1
@@ -78,10 +78,9 @@
 
 (defn minimax
   "Minimax is a well known recursive algorithm that evaluates a 
-   possible set of moves and applies scores of either 0 to each 
-   one,indicating the game will progress, or otherwise declaring
-   a winner. In this implementation of tic-tac-toe, I have used
-   scores of 1,0,-1 but sometimes it is seen as 10,0,-10."
+    possible set of moves and applies scores of either 0 to each 
+    one,indicating the game will progress, or otherwise declaring
+    a winner."
   [board player depth]
   (let [winner (check-winner board)]
    (if (or (zero? depth)
@@ -104,7 +103,7 @@
    (catch NumberFormatException _ false)))
 
 (defn get-valid-input
-  "This function ensures that the user can only enter an integer [0 1 2]"
+  "This function ensures that the user can only enter an integers [0 1 2]"
   [prompt valid-fn]
   (loop []
     (println prompt)
@@ -115,39 +114,79 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
-(defn -main
-  "This is the main game loop. It first prints a heading
-   and then takes user input. It will print an updated board
-   each turn and continue until one of the players have one;
-   correctly identifying the winner, declaring them the winner,
-   and then gracefully exiting."
-  []
-  (let [_ (do
-            (print-heading)
-            (println "  Enter your REAL name"))
-        player-name (read-line)
-        _ (println (str "Okay " player-name ", welcome to the game!"))]
-    (loop [current-board board-state
-           moves-made 0]
-      (print-board current-board)
-      (let [winner (check-winner current-board)]
-        (cond
-          winner
-          (println (str "Player " (if (= winner "X") player-name "Computer") " wins!"))
+(defn print-stats [stats]
+  (println "\nCurrent Stats:")
+  (println (str "Wins: " (:wins stats)))
+  (println (str "Losses: " (:losses stats)))
+  (println (str "Draws: " (:draws stats)))
+  (println (str "Win Rate: "
+                (if (zero? (+ (:wins stats) (:losses stats) (:draws stats)))
+                      "0.0"
+                      (format "%.1f" (* 100.0 (/ (float (:wins stats))
+                                                 (+ (float (:wins stats))
+                                                    (float (:losses stats))
+                                                    (float (:draws stats))))))))
+                   "%\n"))
 
-          (>= moves-made 9)
+  (defn play-again? []
+    (println "\nWould you like to play again? (yes/no)")
+    (let [response (read-line)]
+      (contains? #{"y" "yes"} response)))
+
+  (defn update-stats [stats result]
+    (case result
+      :win (update stats :wins inc)
+      :loss (update stats :losses inc)
+      :draw (update stats :draws inc)))
+
+  
+(defn play-game [player-name stats]
+  (loop [current-board board-state
+         moves-made 0
+         current-stats stats]
+    (print-board current-board)
+    (let [winner (check-winner current-board)]
+      (cond
+        winner
+        (let [is-player-win? (= winner "X")
+              new-stats (update-stats current-stats (if is-player-win? :win :loss))]
+          (println (str "Player " (if is-player-win? player-name "Computer") " wins!"))
+          (print-stats new-stats)
+          (if (play-again?)
+            (recur board-state 0 new-stats)
+            new-stats))
+
+        (>= moves-made 9)
+        (let [new-stats (update-stats current-stats :draw)]
           (println "Game ends in a draw!")
-          
-          :else
-          (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
-                col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
-                board-after-player-move (make-move current-board row col "X")]
-            (if (= board-after-player-move current-board)
-              (recur current-board moves-made)
-              (if (= moves-made 8)
-                (recur board-after-player-move (inc moves-made))
-                (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
-                  (if (or (nil? ai-row) (nil? ai-col))
-                    (recur board-after-player-move (inc moves-made))
-                    (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
-                      (recur board-after-computer-move (+ moves-made 2)))))))))))))
+          (print-stats new-stats)
+          (if (play-again?)
+            (recur board-state 0 new-stats)
+            new-stats))
+
+        :else
+        (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
+              col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
+              board-after-player-move (make-move current-board row col "X")]
+          (if (= board-after-player-move current-board)
+            (recur current-board moves-made current-stats)
+            (if (= moves-made 8)
+              (recur board-after-player-move (inc moves-made) current-stats)
+              (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
+                (if (or (nil? ai-row) (nil? ai-col))
+                  (recur board-after-player-move (inc moves-made) current-stats)
+                  (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
+                    (recur board-after-computer-move (+ moves-made 2) current-stats)))))))))))
+
+
+(defn -main
+  []
+  (print-heading)
+  (println "  Enter your REAL name")
+  (let [player-name (read-line)
+        initial-stats {:wins 0 :losses 0 :draws 0}]
+    (println (str "Okay " player-name ", welcome to the game!"))
+    (let [final-stats (play-game player-name initial-stats)]
+      (println "\nThanks for playing!")
+      (println "Final Stats:")
+      (print-stats final-stats))))
