@@ -1,8 +1,8 @@
 {:paths ["src"]
  :deps {}
  :aliases {:flowstorm-local {:classpath-overrides {org.clojure/clojure nil}
-                             :extra-deps {com.github.flow-storm/clojure {:mvn/version "RELEASE"}
-                                          com.github.flow-storm/flow-storm-dbg {:mvn/version "RELEASE"}}
+                             :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
+                                          com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.4"}}
                              :jvm-opts ["-Dflowstorm.startRecording=false"
                                         "-Dclojure.storm.instrumentEnable=true"
                                         #_"-Dclojure.storm.instrumentAutoPrefixes=true"

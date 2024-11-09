@@ -3,8 +3,7 @@
 ;Lorelai Lyons
 
 (ns tic-tac-two.main
-  (:require [clojure.test :refer :all]
-            [clojure.string :refer [blank?]]))
+  (:require [clojure.string :refer [blank?]]))
 
 (def board-state
   [[" " " " " "]
@@ -19,11 +18,9 @@
   (println (str " ======================\n") 
                  "Lor's Tic-Tac-Toe Game\n"
                  "======================\n"))
-;^I changed the alignment on this just so it would look
-;slightly nicer... (from 'standard clojure form')
 
-(defn legal-move? [row col board-state]
-  (clojure.string/blank? (get-in board-state [row col])))
+(defn legal-move? [row col board]
+  (clojure.string/blank? (get-in board [row col])))
 
 (defn check-winner
   "This part of the algorithm reviews the state of the board
@@ -32,15 +29,16 @@
    cardinal direction. If so it will return that particular 
    array or nil"
   [board]
-  (let [lines (concat board
-                      (apply map vector board)
-                      [[(get board [0 0]) (get board [1 1]) (get board [2 2])]
-                       [(get board [0 2]) (get board [1 1]) (get board [2 0])]])]
+  (let [diag1 [(get-in board [0 0]) (get-in board [1 1]) (get-in board [2 2])]
+        diag2 [(get-in board [0 2]) (get-in board [1 1]) (get-in board [2 0])]
+        rows board
+        cols (apply map vector board)
+        all-lines (concat [diag1 diag2] rows cols)]
     (some (fn [line]
-            (when (and (not (every? #(= " " %) line))
-                       (every? #(= % (first line)) line))
+            (when (and (not= " " (first line))
+                       (apply = line))
               (first line)))
-          lines)))
+          all-lines)))
 
 (defn make-move
   "Make-move functions by taking appropriate
@@ -48,11 +46,11 @@
    spot in the state vectors for both the
    player and computer."
   [board row col player]
-  (if (blank? (get board [row col]))
-    (assoc-in board [row col] player)
-    (do
-      (println "Invalid move! Spot already taken.")
-      board)))
+  (if (legal-move? row col board)
+   (assoc-in board [row col] player)
+   (do
+     (println "Invalid move! Spot already taken.")
+     board)))
 ; ex. =>([0 1] [0 2] [1 0] [1 1] [1 2] [2 0] [2 1])
 
 (defn get-available-moves
@@ -75,6 +73,7 @@
   (cond
     (= (check-winner board) player) 1
     (= (check-winner board) (if (= player "X") "O" "X")) -1
+    (empty? (get-available-moves board)) 0
     :else 0))
 
 (defn minimax
@@ -84,21 +83,25 @@
    a winner. In this implementation of tic-tac-toe, I have used
    scores of 1,0,-1 but sometimes it is seen as 10,0,-10."
   [board player depth]
- (if (or (zero? depth) (empty? (get-available-moves board)))
-   [(evaluate-board board player) nil]
-   (let [available-moves (get-available-moves board)
-         scores-and-moves (for [[row col] available-moves]
-                            (let [new-board (make-move board row col player)
-                                  [score _] (minimax new-board
-                                                     (if (= player "X") "O" "X")
-                                                     (dec depth))]
-                              [score [row col]]))]
-     (if (= player "X")
-       (reduce #(if (> (first %1) (first %2)) %1 %2) scores-and-moves)
-       (reduce #(if (< (first %1) (first %2)) %1 %2) scores-and-moves)))))
+  (let [winner (check-winner board)]
+   (if (or (zero? depth)
+           winner
+           (empty? (get-available-moves board)))
+     [(evaluate-board board player) nil]
+     (let [available-moves (get-available-moves board)
+           scores-and-moves (for [[row col] available-moves]
+                              (let [new-board (make-move board row col player)
+                                    [score _] (minimax new-board
+                                                       (if (= player "X") "O" "X")
+                                                       (dec depth))]
+                                [(* -1 score) [row col]]))]
+       (apply max-key first scores-and-moves)))))
 
 (defn valid-input? [input]
-  (and (not (blank? input)) (some #(= (Integer/parseInt input) %) [0 1 2])))
+  (try
+   (and (not (blank? input))
+        (some #(= (Integer/parseInt input) %) [0 1 2]))
+   (catch NumberFormatException _ false)))
 
 (defn get-valid-input
   "This function ensures that the user can only enter an integer [0 1 2]"
@@ -124,97 +127,27 @@
             (println "  Enter your REAL name"))
         player-name (read-line)
         _ (println (str "Okay " player-name ", welcome to the game!"))]
-    (loop [current-board board-state] 
-      (let [_ (print-board current-board)
-            winner (check-winner current-board)
-            winner-name (if (= winner "X") player-name
-                            "Computer...")]
-        (if winner
-          (println (str "Player " winner-name " wins!"))
-          (let [row (get-valid-input "Enter your row [0, 1, 2]:" #(valid-input? %))
-                col (get-valid-input "Enter your column [0, 1, 2]:" #(valid-input? %))
-                board-after-player-move (make-move current-board row col "X")
-                [ai-score [ai-row ai-col]] (minimax board-after-player-move "O" 9)
-                board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
-            (recur board-after-computer-move)))))))
+    (loop [current-board board-state
+           moves-made 0]
+      (print-board current-board)
+      (let [winner (check-winner current-board)]
+        (cond
+          winner
+          (println (str "Player " (if (= winner "X") player-name "Computer") " wins!"))
 
-(comment
-  (defn test-minimax
-    "Helper to test minimax for a given board and player"
-    [board player expected-score expected-move]
-    (let [[score move] (minimax board player 9)]
-      (is (= score expected-score) (str "Expected score " expected-score " but got " score))
-      (is (= move expected-move) (str "Expected move " expected-move " but got " move))))
-
-       ;Test 1: Example where "X" is about to win
-  (test-minimax
-   [["X" "O" "X"]
-    [" " "X" " "]
-    ["O" "O" "X"]]
-   "X"
-   1
-   [1 1])
-	  ;"X" will win by placing at (1, 1)
-
-    ;Test 2: Example where "O" is about to win
-  (test-minimax
-   [["X" " " " "]
-    ["X" "O" "O"]
-    ["O" "X" " "]]
-   "X"
-   -1
-   [0 1])
-	  ;"X" needs to block "O" by placing at (0, 1)
-
-    ;Test 3: A draw situation (no winner)
-  (test-minimax
-   [["X" "O" "X"]
-    ["O" "X" "O"]
-    ["O" "X" "O"]]
-   "X"
-   0
-   [0 1])
-	  ;No moves left, but score is 0 since it's a draw
-
-    ;Test 4: Edge case: Board with one move left (draw)
-  (test-minimax
-   [["X" "O" "X"]
-    ["O" "X" "O"]
-    ["O" "X" " "]]
-   "X"
-   0
-   [2 2])
-	  ;It's a draw but "X" plays the last move
-
-    ;Test 5: Edge case: Player "X" must block opponent from winning
-  (test-minimax
-   [["X" "O" " "]
-    ["X" "O" " "]
-    [" " "O" " "]]
-   "X"
-   0
-   [2 0])
-	  ;"X" blocks "O" at (2, 0)
-
-    ;Test 6: Player "O" has a forced win
-  (test-minimax
-   [["X" "O" "X"]
-    ["X" "O" " "]
-    ["O" "X" " "]]
-   "O"
-   1
-   [2 2])
-	  ;"O" wins by placing at (2, 2)
-
-  (testing "Minimax with invalid moves"
-    ;Test: No moves left (game over)
-    (test-minimax
-     [["X" "O" "X"]
-      ["O" "X" "O"]
-      ["O" "X" "O"]]
-     "X"
-     0
-     [0 0]))
-	  ;No available moves, score is 0 because of a draw
-
-  (run-tests))
+          (>= moves-made 9)
+          (println "Game ends in a draw!")
+          
+          :else
+          (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
+                col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
+                board-after-player-move (make-move current-board row col "X")]
+            (if (= board-after-player-move current-board)
+              (recur current-board moves-made)
+              (if (= moves-made 8)
+                (recur board-after-player-move (inc moves-made))
+                (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
+                  (if (or (nil? ai-row) (nil? ai-col))
+                    (recur board-after-player-move (inc moves-made))
+                    (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
+                      (recur board-after-computer-move (+ moves-made 2)))))))))))))
