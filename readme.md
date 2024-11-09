@@ -43,8 +43,10 @@ will be stored locally for the time being, with DB storage an optional future go
 4. cd tic-tac-toe
 
 5. Run the game using:
-    -clojure -m tic-tac-toe.core
-    -This will start the Tic-Tac-Toe game in your terminal.
+    - clojure -m tic-tac-toe.core
+    - This will start the Tic-Tac-Toe game in your terminal.
+    - Alternatively, you can jack into your REPL and evaluate the main function
+      to begin.
 
 ### __How to Play__
 
@@ -53,7 +55,7 @@ will be stored locally for the time being, with DB storage an optional future go
 2. Input Moves: When it's your turn, input the row and column numbers (0, 1, or 2) where you want to place your mark.
 
 3. Game Progression: The game will continue until one player wins or the game is a draw.
-    -   (Pro-tip: Only the computer can win)
+    - (Pro-tip: Only the computer can win)
 
 4. Replay: After each game, you will be asked if you want to play again. Type "yes" to play another round or "no" to exit the game.
 
