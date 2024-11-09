@@ -63,9 +63,10 @@
     :else 0))
 
 (defn minimax
-  "Minimax is a well known recursive algorithm that evaluates a possible set of 
-    moves and applies scores of either 0 to each one,indicating the game will 
-    progress, or otherwise declaring a winner."
+  "Minimax is a recursive algorithm that assesses a current board-state, and
+    applies scores of either nil to each one (location),indicating the game will 
+    progress, or otherwise declaring a winner. If a score 1 or -1 is returned,
+    a position is not returned."
   [board player depth]
   (let [winner (check-winner board)]
    (if (or (zero? depth)
