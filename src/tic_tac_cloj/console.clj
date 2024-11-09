@@ -8,7 +8,7 @@
 (defn print-heading
   []
   (println title)
-  (println "  Enter your REAL name"))
+  (println " Enter your REAL name"))
 
 (defn print-board
   [board]

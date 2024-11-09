@@ -20,9 +20,11 @@ The minimum viable product (MVP) for this project includes the following feature
 
 ### __Stretch Goals__
 
+✅ = Accomplished
+
 - ✅ Game Replay Option: Implement replay functionality where after each game, players can choose to play again.
 
-- 🏆 Statistics Recap: After each game basic game statistics including the number
+- ✅ Statistics Recap: After each game basic game statistics including the number
 and percentage of games won/lost/drawn will be displayed to the user. These scores
 will be stored locally for the time being, with DB storage an optional future goal.
 
@@ -78,5 +80,9 @@ will be stored locally for the time being, with DB storage an optional future go
 - Multiplayer: Extend the game to support network play where players can play from different machines.
 
 - Multidimensionality: Level the game up by doing cubes or other geometric figures.
+
+- Themes (colors, fonts, styles)
+
+- Settings (is 0 from top or bottom, row first or col first?)
 
 ###### Thanks for checking out my application!
