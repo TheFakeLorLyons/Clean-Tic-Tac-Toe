@@ -10,10 +10,15 @@
   (println title)
   (println " Enter your REAL name"))
 
-(defn print-board
-  [board]
+(defn print-board-and-moves
+  [board moves-made?]
+  (println (str "Moves: " moves-made?))
   (doseq [row board]
     (println (clojure.string/join " | " (map #(or % " ") row)))))
+
+(defn print-current-board
+  [state moves-made?]
+  (print-board-and-moves (:board state) moves-made?))
 
 (defn calculate-wld-rate
   [stats which?]
@@ -57,13 +62,12 @@
 
 (defn print-stats
   [stats is-final?]
-  (if is-final?
-    (println "\nThanks for playing!\n");Final stats were printed prior, so this says bye!
-    (println "\nCurrent Stats:"))      ;Otherwise, print the current stats!
-  (print-end-of-game-stats stats))     ;Printing the W/L/D rates above.
+  (when is-final?
+    (println "\nThanks for playing!\n"))
+  (print-end-of-game-stats stats))
 
 (defn print-draw-or-computer-win
-  "Since the computer can't win we really only need to write the computer part."
+  "Since the computer can't win, it is technically only necessary to to write the computer perspective."
   [loss-or-draw is-player-win? player-name]
   (if loss-or-draw
     (println "Game ends in a draw!")
@@ -75,25 +79,18 @@
   (let [response (read-line)]
     (contains? #{"y" "yes"} response)))
 
-(defn update-stats
-  [stats result]
-  (let [updated-stats
-        (case result
-          :win (update stats :wins inc)
-          :loss (update stats :losses inc)
-          :draw (update stats :draws inc))]
-    updated-stats))
+(defn update-stats [stats result]
+  (update stats result inc))
 
-(defn print-stats-and-prompt-new-game
-  [current-stats]
-  (print-stats current-stats 0)
-  [current-stats (play-again?)])
-
-(defn handle-game-over
-  [current-board current-stats winner moves-made is-player-win? player-name]
-  (let [new-stats (update-stats current-stats
-                                        (cond
-                                          winner (if is-player-win? :win :loss)
-                                          (>= moves-made 9) :draw))]
-    (print-draw-or-computer-win (not winner) is-player-win? player-name)
-    (print-stats-and-prompt-new-game new-stats)))
+(defn handle-game-over-state
+  [state]
+  (let [{:keys [board stats winner player-name]} state
+        is-player-win? (= winner "X")]
+    (print-draw-or-computer-win (nil? winner) is-player-win? player-name)
+    (print-stats stats 0)  ; Print current game stats
+    (let [play-again (play-again?)]
+      (if play-again
+        [stats true]
+        (do
+          (print-stats stats 1)  ; Only print final stats with goodbye if player is done
+          [stats false])))))

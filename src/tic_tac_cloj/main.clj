@@ -3,9 +3,15 @@
             [tic-tac-cloj.console :as console]))
 
 (def board-state
-  [[" " " " " "]
-   [" " " " " "]
-   [" " " " " "]])
+  {:board [[" " " " " "]
+           [" " " " " "]
+           [" " " " " "]]
+   :moves-made 0
+   :stats {:wins 0 :losses 0 :draws 0}
+   :player-name nil
+   :current-player "X"})
+
+(def game-state (atom board-state))
 
 (defn legal-move? [row col board]
   (clojure.string/blank? (get-in board [row col])))
@@ -26,10 +32,8 @@
 (defn make-move
   [board row col player]
   (if (legal-move? row col board)
-   (assoc-in board [row col] player)
-   (do
-     (println "Invalid move! Spot already taken.")
-     board)))
+    (assoc-in board [row col] player)
+    board))
 
 (defn get-available-moves
   [board]
@@ -80,56 +84,84 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
-(defn handle-player-move
-  [current-board moves-made current-stats]
+(defn game-over-state [current-state]
+  (let [{:keys [board moves-made]} current-state
+        winner (check-winner board)]
+    (cond
+      winner
+      {:state :game-over
+       :next-state (-> current-state
+                      (assoc :winner winner)
+                      (update :stats #(update % (if (= winner "X") :wins :losses) inc)))}
+
+      (>= moves-made 9)
+      {:state :game-over
+       :next-state (-> current-state
+                      (assoc :winner nil)
+                      (update :stats #(update % :draws inc)))}
+
+      :else nil)))
+(defn handle-move
+  [current-state [row col]]
+  (let [{:keys [board current-player]} current-state
+        new-board (make-move board row col current-player)]
+    (if (= new-board board)
+      {:state :invalid-move
+       :next-state current-state}
+      {:state :continue
+       :next-state (-> current-state
+                       (assoc :board new-board)
+                       (update :moves-made inc)
+                       (assoc :current-player (if (= current-player "X") "O" "X")))})))
+
+(defn compute-next-state
+  [current-state input]
+  (handle-move current-state
+               (if (= (:current-player current-state) "X")
+                 input  ; Player's move
+                 (let [[_ [ai-row ai-col]] (minimax (:board current-state) "O" 9)]
+                   [ai-row ai-col]))))
+
+(defn handle-player-turn []
   (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
-        col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
-        board-after-player-move (make-move current-board row col "X")]
-    (if (= board-after-player-move current-board)
-      (recur current-board moves-made current-stats)
-      [board-after-player-move (inc moves-made) current-stats])))
+        col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
+    [row col]))
 
-(defn handle-computer-move
-  [board-after-player-move moves-made current-stats]
-  (if (>= moves-made 9)
-    [board-after-player-move moves-made current-stats]
-    (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
-      (if (or (nil? ai-row) (nil? ai-col))
-        [board-after-player-move moves-made current-stats]
-        (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
-          [board-after-computer-move (inc moves-made) current-stats])))))
+(defn play-game [player-name]
+  (reset! game-state (assoc board-state :player-name player-name))
+  (loop []
+    (let [current-state @game-state]
+      (console/print-current-board current-state (:moves-made current-state))
 
-(defn play-game
-  [player-name stats]
-  (loop [current-board board-state
-         moves-made 0
-         current-stats stats]
-    (console/print-board current-board)
-    (let [winner (check-winner current-board)]
-      (cond
-        winner
-        (let [is-player-win? (= winner "X");loss condition or 'win' if win was possible.
-              [new-stats playing-again?] (console/handle-game-over current-board current-stats winner moves-made is-player-win? player-name)]
-          (if playing-again?
-            (recur board-state 0 new-stats)
+      ;is the game over? Loss or Draw Condition since win is impossible
+      (if-let [{:keys [state next-state]} (game-over-state current-state)]
+        (let [[new-stats play-again?] (console/handle-game-over-state next-state)]
+          (if play-again?
+            (do
+              (reset! game-state (assoc board-state
+                                        :stats new-stats
+                                        :player-name player-name))
+              (recur))
             new-stats))
 
-        (>= moves-made 9);draw condition
-        (let [[new-stats playing-again?] (console/handle-game-over current-board current-stats nil moves-made false player-name)]
-          (if playing-again?
-            (recur board-state 0 new-stats)
-            new-stats))
+        ;Continue game, player and computer input.
+        (let [input (when (= (:current-player current-state) "X")
+                      (handle-player-turn))
+              {:keys [state next-state]} (compute-next-state current-state input)]
+          (reset! game-state next-state)
+          (case state
+            :invalid-move ;as opposed to invalid 'input' the form of input would is  
+            (do           ;fine, but in this condition the board spot is taken.
+              (println "Invalid move! Spot already taken.")
+              (recur))
 
-        :else            ;if not a loss or draw, the game continues on and the computer takes a turn
-        (let [[board-after-player-move new-move-count updated-stats] (handle-player-move current-board moves-made current-stats)
-              [board-after-computer-move final-move-count final-stats] (handle-computer-move board-after-player-move new-move-count updated-stats)]
-          (recur board-after-computer-move final-move-count final-stats))))))
+            :continue
+            (recur)))))))
 
 (defn -main
   []
-  (console/print-heading) 
-  (let [player-name (read-line)
-        initial-stats {:wins 0 :losses 0 :draws 0}
-        _ (println (str "Okay " player-name ", welcome to the game!"))
-        final-stats (play-game player-name initial-stats)]
-      (console/print-stats final-stats 1)))
+  (console/print-heading)
+  (let [player-name (read-line)]
+    (println (str "Okay " player-name ", welcome to the game!"))
+    (let [final-stats (play-game player-name)]
+      (console/print-stats final-stats 1))))
