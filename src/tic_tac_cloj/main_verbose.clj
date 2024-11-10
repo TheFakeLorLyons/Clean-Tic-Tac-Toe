@@ -5,7 +5,7 @@
 
 (ns tic-tac-cloj.main-verbose
   (:require [clojure.string :refer [blank?]]
-            [tic-tac-two.console :as console]))
+            [tic-tac-cloj.console :as console]))
 
 (def board-state
   [[" " " " " "]
@@ -100,14 +100,37 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
+(defn handle-player-move 
+  "Responsible for taking the user input and validating it agains the model for input 
+    provided via valid-input?. Calls make-move, which is shared between the human and AI."
+  [current-board moves-made current-stats]
+  (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
+        col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
+        board-after-player-move (make-move current-board row col "X")]
+    (if (= board-after-player-move current-board)
+      (recur current-board moves-made current-stats)
+      [board-after-player-move (inc moves-made) current-stats])))
+
+(defn handle-computer-move
+  "Responsible for the computer's turn. Calls minimax to determine the most appropriate move 
+    and make move to update the board state."
+  [board-after-player-move moves-made current-stats]
+  (if (>= moves-made 9)
+    [board-after-player-move moves-made current-stats]
+    (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
+      (if (or (nil? ai-row) (nil? ai-col))
+        [board-after-player-move moves-made current-stats]
+        (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
+          [board-after-computer-move (inc moves-made) current-stats])))))
+
 (defn play-game
-  "This is the main game loop. Since the program is optimized/unlosable for the
-    computer, technically only a draw or a loss may occur, but not by design - 
-    rather the algorithm ensures that the computer plays 'optimally' so 
-    theoretically the player actually could win; but the algorithm ensures at 
-    least a draw as long as the computer follows the code without unforeseen 
-    error. Accompanied are tests, and any further testing is welcome and I can 
-    provide further testing upon request."
+    "This is the main game loop. Since the program is optimized/unlosable for the
+      computer, technically only a draw or a loss may occur, but not by design - 
+      rather the algorithm ensures that the computer plays 'optimally' so 
+      theoretically the player actually could win; but the algorithm ensures at 
+      least a draw as long as the computer follows the code without unforeseen 
+      error. Accompanied are tests, and any further testing is welcome and I can 
+      provide further testing upon request."
   [player-name stats]
   (loop [current-board board-state
          moves-made 0
@@ -117,34 +140,22 @@
       (cond
         winner
         (let [is-player-win? (= winner "X");loss condition or 'win' if win was possible.
-              new-stats (console/update-stats current-stats (if is-player-win? :win :loss))]
-          (console/print-draw-or-computer-win false is-player-win? player-name)
-          (console/print-stats new-stats 0)
-          (if (console/play-again?)
+              [new-stats playing-again?] (console/handle-game-over current-board current-stats winner moves-made is-player-win? player-name)]
+          (if playing-again?
             (recur board-state 0 new-stats)
             new-stats))
 
         (>= moves-made 9);draw condition
-        (let [new-stats (console/update-stats current-stats :draw)]
-          (console/print-draw-or-computer-win true false player-name)
-          (console/print-stats new-stats 0)
-          (if (console/play-again?)
+        (let [[new-stats playing-again?] (console/handle-game-over current-board current-stats nil moves-made false player-name)]
+          (if playing-again?
             (recur board-state 0 new-stats)
             new-stats))
 
-        :else;if not a loss or draw, the game continues on and the computer takes a turn
-        (let [row (get-valid-input "Enter your row [0, 1, 2]:" valid-input?)
-              col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)
-              board-after-player-move (make-move current-board row col "X")]
-          (if (= board-after-player-move current-board)
-            (recur current-board moves-made current-stats)
-            (if (= moves-made 8)
-              (recur board-after-player-move (inc moves-made) current-stats)
-              (let [[_ [ai-row ai-col] :as minimax-result] (minimax board-after-player-move "O" 9)]
-                (if (or (nil? ai-row) (nil? ai-col))
-                  (recur board-after-player-move (inc moves-made) current-stats)
-                  (let [board-after-computer-move (make-move board-after-player-move ai-row ai-col "O")]
-                    (recur board-after-computer-move (+ moves-made 2) current-stats)))))))))))
+        :else            ;if not a loss or draw, the game continues on and the computer takes a turn
+        (let [[board-after-player-move new-move-count updated-stats] (handle-player-move current-board moves-made current-stats)
+              [board-after-computer-move final-move-count final-stats] (handle-computer-move board-after-player-move new-move-count updated-stats)]
+          (recur board-after-computer-move final-move-count final-stats))))))
+
 
 (defn -main
     "The entry point to the program. It first prints a heading and then takes

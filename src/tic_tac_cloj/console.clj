@@ -83,3 +83,17 @@
           :loss (update stats :losses inc)
           :draw (update stats :draws inc))]
     updated-stats))
+
+(defn print-stats-and-prompt-new-game
+  [current-stats]
+  (print-stats current-stats 0)
+  [current-stats (play-again?)])
+
+(defn handle-game-over
+  [current-board current-stats winner moves-made is-player-win? player-name]
+  (let [new-stats (update-stats current-stats
+                                        (cond
+                                          winner (if is-player-win? :win :loss)
+                                          (>= moves-made 9) :draw))]
+    (print-draw-or-computer-win (not winner) is-player-win? player-name)
+    (print-stats-and-prompt-new-game new-stats)))
