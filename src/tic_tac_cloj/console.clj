@@ -1,4 +1,31 @@
-(ns tic-tac-cloj.console)
+(ns tic-tac-cloj.console
+  (:require [clojure.string :refer [blank?]]))
+
+
+
+(defn valid-input? [input]
+  (try
+    (and (not (blank? input))
+         (some #(= (Integer/parseInt input) %) [0 1 2]))
+    (catch NumberFormatException _ false)))
+
+(defn get-valid-input
+  [prompt valid-fn]
+  (loop [] ;continuously prompt user input until valid entry
+    (println prompt) ;pls
+    (let [input (read-line)]
+      (if (valid-fn input)
+        (Integer/parseInt input)
+        (do
+          (println "Invalid input. Please try again.")
+          (recur))))))
+
+(defn handle-player-turn []
+  (let [row (get-valid-input "\nEnter your row [0, 1, 2]:" valid-input?)
+        col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
+    [row col]))
+
+
 
 (def title
   (str "======================\n"
@@ -12,7 +39,7 @@
 
 (defn print-board-and-moves
   [board moves-made?]
-  (println (str "Moves: " moves-made?))
+  (println (str "\nMoves: " moves-made?))
   (doseq [row board]
     (println (clojure.string/join " | " (map #(or % " ") row)))))
 
@@ -55,42 +82,36 @@
   (doseq [stat [:wins :losses :draws]]
     (f stats stat)))
 
+(defn end-of-game-message
+  [is-final?]
+  (if is-final?
+    (println "\nThanks for playing!\n")
+    (println "Current Stats: ")))
+
 (defn print-end-of-game-stats
   [stats]
+  (end-of-game-message false)
   (wld-factory discrete-value-format stats)
   (wld-factory stat-format stats))  
 
-(defn print-stats
-  [stats is-final?]
-  (when is-final?
-    (println "\nThanks for playing!\n"))
-  (print-end-of-game-stats stats))
-
-(defn print-draw-or-computer-win
+(defn print-draw-or-loss
   "Since the computer can't win, it is technically only necessary to to write the computer perspective."
   [loss-or-draw is-player-win? player-name]
   (if loss-or-draw
-    (println "Game ends in a draw!")
+    (println "\n*~Game ends in a draw!~*\n")
     (println (str "Player " (if is-player-win? player-name "Computer") " wins!"))))
 
 (defn play-again?
   []
   (println "\nWould you like to play again? (yes/no)")
-  (let [response (read-line)]
+  (let [response (clojure.string/lower-case (read-line))]
     (contains? #{"y" "yes"} response)))
-
-(defn update-stats [stats result]
-  (update stats result inc))
 
 (defn handle-game-over-state
   [state]
-  (let [{:keys [board stats winner player-name]} state
+  (let [{:keys [stats winner player-name]} state
         is-player-win? (= winner "X")]
-    (print-draw-or-computer-win (nil? winner) is-player-win? player-name)
-    (print-stats stats 0)  ; Print current game stats
+    (print-draw-or-loss (nil? winner) is-player-win? player-name)
+    (print-end-of-game-stats stats)
     (let [play-again (play-again?)]
-      (if play-again
-        [stats true]
-        (do
-          (print-stats stats 1)  ; Only print final stats with goodbye if player is done
-          [stats false])))))
+      [stats play-again])))
