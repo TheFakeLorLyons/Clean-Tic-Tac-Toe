@@ -27,6 +27,7 @@
         col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
     [row col]))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;            console output           ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -89,9 +90,9 @@
 
 (defn wld-factory
   "Takes a function and stats, applies the function to each stat type"
-  [f stats]
+  [fn stats]
   (doseq [stat [:wins :losses :draws]]
-    (f stats stat)))
+    (fn stats stat)))
 
 (defn end-of-game-message
   [is-final?]
@@ -107,10 +108,10 @@
 
 (defn print-draw-or-loss
   "Since the computer can't win, it is technically only necessary to to write the computer perspective."
-  [loss-or-draw is-player-win? player-name]
-  (if loss-or-draw
+  [draw-or-loss player-win? player-name]
+  (if draw-or-loss
     (println "\n*~Game ends in a draw!~*\n")
-    (println (str "Player " (if is-player-win? player-name "Computer") " wins!"))))
+    (println (str "Player " (if player-win? player-name "Computer") " wins!"))))
 
 (defn play-again?
   []

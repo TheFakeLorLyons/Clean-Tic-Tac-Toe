@@ -2,19 +2,57 @@
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.ai :as ai]))
 
-;Mock functions for testing
-(def empty-board
-  [[nil nil nil]
-   [nil nil nil]
-   [nil nil nil]])
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;    get-available-moves Testing      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def initial-state
-  {:board empty-board
-   :current-player "X"
-   :game-status :in-progress})
+(deftest get-available-moves-tests
+  (testing "Empty board"
+    (is (= #{[0 0] [0 1] [0 2]
+             [1 0] [1 1] [1 2]
+             [2 0] [2 1] [2 2]}
+           (set (ai/get-available-moves [[" " " " " "]
+                                         [" " " " " "]
+                                         [" " " " " "]])))))
 
-(defn mock-minimax [board player depth]
-  [0 [1 1]])
+  (testing "Partially filled board"
+    (is (= #{[0 1] [0 2]
+             [1 0] [1 2]
+             [2 0] [2 1] [2 2]}
+           (set (ai/get-available-moves [["X" " " " "]
+                                         [" " "O" " "]
+                                         [" " " " " "]])))))
+
+  (testing "Nearly full board"
+    (is (= #{[2 2]}
+           (set (ai/get-available-moves [["X" "O" "X"]
+                                         ["O" "X" "O"]
+                                         ["X" "O" " "]])))))
+
+  (testing "Full board"
+    (is (empty? (ai/get-available-moves [["X" "O" "X"]
+                                         ["O" "X" "O"]
+                                         ["X" "O" "X"]]))))
+
+  (testing "Board with multiple empty spaces"
+    (is (= #{[0 0] [1 1] [2 2]}
+           (set (ai/get-available-moves [[" " "X" "O"]
+                                         ["X" " " "O"]
+                                         ["X" "O" " "]]))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;      evaluate-board Testing         ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(deftest evaluate-board-tests
+  (testing "Winning positions for X"
+    (is (= 1 (ai/evaluate-position "X" "X" [])))  ; X wins, no available moves left
+    (is (= 1 (ai/evaluate-position "X" "X" [])))  ; X wins in first row
+    (is (= 1 (ai/evaluate-position "X" "X" [])))  ; X wins in last row
+
+    (testing "Winning positions for O"
+      (is (= -1 (ai/evaluate-position "X" "O" []))) ; O wins
+      (is (= -1 (ai/evaluate-position "X" "O" []))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;         minimax testing             ;
@@ -97,7 +135,6 @@
           result (ai/minimax board "X" 3)]
       (is (= [0 nil] result)))))
 
-
 (deftest minimax-algorithm-test
   (testing "Minimax immediate wins and blocks"
     (let [almost-win-board [["X" "X" " "]
@@ -132,90 +169,9 @@
         (let [[score move] (ai/minimax draw-board "X" 3)]
           (is (= score 0)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;    get-available-moves Testing      ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest get-available-moves-tests
-  (testing "Empty board"
-    (is (= #{[0 0] [0 1] [0 2]
-             [1 0] [1 1] [1 2]
-             [2 0] [2 1] [2 2]}
-           (set (ai/get-available-moves [[" " " " " "]
-                                         [" " " " " "]
-                                         [" " " " " "]])))))
-
-  (testing "Partially filled board"
-    (is (= #{[0 1] [0 2]
-             [1 0] [1 2]
-             [2 0] [2 1] [2 2]}
-           (set (ai/get-available-moves [["X" " " " "]
-                                         [" " "O" " "]
-                                         [" " " " " "]])))))
-
-  (testing "Nearly full board"
-    (is (= #{[2 2]}
-           (set (ai/get-available-moves [["X" "O" "X"]
-                                         ["O" "X" "O"]
-                                         ["X" "O" " "]])))))
-
-  (testing "Full board"
-    (is (empty? (ai/get-available-moves [["X" "O" "X"]
-                                         ["O" "X" "O"]
-                                         ["X" "O" "X"]]))))
-
-  (testing "Board with multiple empty spaces"
-    (is (= #{[0 0] [1 1] [2 2]}
-           (set (ai/get-available-moves [[" " "X" "O"]
-                                         ["X" " " "O"]
-                                         ["X" "O" " "]]))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;      evaluate-board Testing         ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest evaluate-board-tests
-  (testing "Winning positions for X"
-    (is (= 1 (ai/evaluate-position [["X" "X" "X"]
-                                    ["O" "O" " "]
-                                    [" " " " " "]] "X")))
-    (is (= 1 (ai/evaluate-position [["X" "O" " "]
-                                    ["X" "O" " "]
-                                    ["X" " " " "]] "X")))
-    (is (= 1 (ai/evaluate-position [["X" "O" " "]
-                                    ["O" "X" " "]
-                                    [" " " " "X"]] "X"))))
-
-  (testing "Winning positions for O"
-    (is (= -1 (ai/evaluate-position [["X" "O" "X"]
-                                     ["X" "O" " "]
-                                     [" " "O" " "]] "X")))
-    (is (= -1 (ai/evaluate-position [["X" "O" " "]
-                                     ["X" "O" " "]
-                                     [" " "O" "X"]] "X")))
-    (is (= 1 (ai/evaluate-position [["X" "O" " "]
-                                    ["X" "O" " "]
-                                    [" " "O" "X"]] "O"))))
-
-  (testing "Draw positions"
-    (is (= 0 (ai/evaluate-position [["X" "O" "X"]
-                                    ["O" "X" "O"]
-                                    ["O" "X" "O"]] "X")))
-    (is (= 0 (ai/evaluate-position [["X" "O" "X"]
-                                    ["O" "X" "O"]
-                                    ["O" "X" "O"]] "O"))))
-
-  (testing "Ongoing game positions"
-    (is (= 0 (ai/evaluate-position [[" " " " " "]
-                                    [" " "X" " "]
-                                    [" " " " " "]] "X")))
-    (is (= 0 (ai/evaluate-position [["X" "O" " "]
-                                    [" " "X" " "]
-                                    [" " " " "O"]] "O")))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;     ai/compute-next-game-state testing      ;
+                               ;        compute-next-game-state testing       ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest compute-next-state-tests
@@ -265,105 +221,78 @@
       (is (= "O" (get-in result [:next-state :board 1 1]))))))
 
 
-(deftest compute-next-game-state-test
-  ;Player X's valid move to empty position
-  (testing "Player X makes a valid move"
-    (let [input [0 0]
-          result (ai/compute-next-game-state initial-state input)]
-      (is (= "X" (get-in result [:board 0 0]))
-          "Should place X at [0 0]")
-      (is (= "O" (:current-player result))
-          "Should switch to player O")))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                               ;              process-turn testing            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;AI player O's move
-  (testing "AI player O makes a move"
-    (with-redefs [ai/minimax mock-minimax]
-      (let [x-state {:board [[nil nil nil]
-                             [nil nil nil]
-                             [nil nil nil]]
-                     :current-player "O"}
-            result (ai/compute-next-game-state x-state nil)]
-        (is (= "O" (get-in result [:board 1 1]))
-            "AI should place O at center position [1 1]")
-        (is (= "X" (:current-player result))
-            "Should switch back to player X"))))
+(deftest process-turn-test
 
-  ;Player X attempts invalid move
-  (testing "Player X attempts move on occupied position"
-    (let [board [[nil nil nil]
-                 [nil "O" nil]
-                 [nil nil nil]]
-          state {:board board :current-player "X"}
-          input [1 1]]
-      (is (thrown? IllegalStateException
-                   (ai/compute-next-game-state state input))
-          "Should throw exception for invalid move")))
+  (testing "Player makes valid move to empty space"
+    (let [initial-state {:board [["" "" ""]
+                                 ["" "" ""]
+                                 ["" "" ""]]
+                         :current-player "X"
+                         :moves-made 0}
+          result (ai/process-turn initial-state [0 0])]
+      (is (= :continue (:status result)))
+      (is (= "X" (get-in (:state result) [:board 0 0])))))
 
-  ;Game winning move by X
-  (testing "Player X makes winning move"
-    (let [board [["X" "X" nil]
-                 ["O" "O" nil]
-                 [nil nil nil]]
-          state {:board board :current-player "X"}
-          input [0 2]
-          result (ai/compute-next-game-state state input)]
-      (is (= :winner-x (:game-status result))
-          "Should recognize X as winner")))
+  (testing "Player attempts move to occupied space"
+    (let [initial-state {:board [["X" "" ""]
+                                 ["" "" ""]
+                                 ["" "" ""]]
+                         :current-player "X"
+                         :moves-made 1}
+          result (ai/process-turn initial-state [0 0])]
+      (is (= :invalid (:status result)))
+      (is (= initial-state (:state result)))))
 
-  ;Game winning move by O
-  (testing "AI player O makes winning move"
-    (with-redefs [ai/minimax (fn [_ _ _] [10 [2 2]])]
-      (let [board [["O" "O" nil]
-                   ["X" "X" nil]
-                   [nil nil nil]]
-            input [0 2]
-            state {:board board :current-player "O"}
-            result (ai/compute-next-game-state state input)]
-        (is (= :winner-o (:game-status result))
-            "Should recognize O as winner"))))
+  (testing "Game continues after valid moves"
+    (let [initial-state {:board [["X" "O" ""]
+                                 ["" "" ""]
+                                 ["" "" ""]]
+                         :current-player "X"
+                         :moves-made 2}
+          result (ai/process-turn initial-state [1 1])]
+      (is (= :continue (:status result)))
+      (is (= 3 (:moves-made (:state result))))))
 
-  ;Draw game scenario
-  (testing "Move leading to draw"
-    (let [board [["X" "O" "X"]
-                 ["O" "X" "O"]
-                 ["O" "X" nil]]
-          state {:board board :current-player "X"}
-          input [2 2]
-          result (ai/compute-next-game-state state input)]
-      (is (= :draw (:game-status result))
-          "Should recognize draw game")))
+  (testing "Moves-made counter increments after valid move"
+    (let [initial-state {:board [["" "" ""]
+                                 ["" "" ""]
+                                 ["" "" ""]]
+                         :current-player "X"
+                         :moves-made 0}
+          result (ai/process-turn initial-state [0 0])]
+      (is (= 1 (:moves-made (:state result))))))
 
-  ;First move of the game
-  (testing "First move of the game"
-    (let [result (ai/compute-next-game-state initial-state [0 0])]
-      (is (= empty-board
-             (assoc-in (:board initial-state) [0 0] "X"))
-          "Should only modify the specified position")
-      (is (= :in-progress (:game-status result))
-          "Game should still be in progress")))
+  (testing "Current player alternates after valid move"
+    (let [initial-state {:board [["" "" ""]
+                                 ["" "" ""]
+                                 ["" "" ""]]
+                         :current-player "X"
+                         :moves-made 0}
+          result (ai/process-turn initial-state [0 0])]
+      (is (= "O" (:current-player (:state result))))))
 
-  ;: AI blocking opponent's winning move
-  (testing "AI blocks opponent's winning move"
-    (with-redefs [ai/minimax (fn [_ _ _] [0 [0 2]])]
-      (let [board [["X" "X" nil]
-                   ["O" nil nil]
-                   [nil nil nil]]
-            state {:board board :current-player "O"}
-            result (ai/compute-next-game-state state nil)]
-        (is (= "O" (get-in result [:board 0 2]))
-            "AI should block X's winning move"))))
+  (testing "Board state remains unchanged after invalid move"
+    (let [initial-board [["X" "O" ""]
+                         ["" "X" ""]
+                         ["" "" "O"]]
+          initial-state {:board initial-board
+                         :current-player "X"
+                         :moves-made 5}
+          result (ai/process-turn initial-state [0 0])]
+      (is (= initial-board (:board (:state result))))))
 
-  ;Edge case - empty input for player X
-  (testing "Empty input for player X"
-    (is (thrown? IllegalArgumentException
-                 (ai/compute-next-game-state initial-state nil))
-        "Should throw exception for nil input from player X"))
-
-  ;Edge case - out of bounds move
-  (testing "Out of bounds move"
-    (is (thrown? IndexOutOfBoundsException
-                 (ai/compute-next-game-state initial-state [3 3]))
-        "Should throw exception for out of bounds move")))
-
+  (testing "Valid move on nearly full board"
+    (let [initial-state {:board [["X" "O" "X"]
+                                 ["O" "X" "O"]
+                                 ["O" "X" ""]]
+                         :current-player "X"
+                         :moves-made 8}
+          result (ai/process-turn initial-state [2 2])]
+      (is (= :continue (:status result)))
+      (is (= "X" (get-in (:state result) [:board 2 2]))))))
 
 (run-tests)

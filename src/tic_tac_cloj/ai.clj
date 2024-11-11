@@ -13,28 +13,26 @@
 
 (defn evaluate-position
   "This function applies a score to the potential move being evaluated. A score
-    of 0 inevitably continues the game and will lead to an updated board state,
-    while a 1 or -1 signal the end of the game."
-  [board player]
+    of 1 indicates a win for the player, -1 for opponent, and 0 for ongoing/draw."
+  [player winner available-moves]
   (cond
-    (= (state/detect-winning-row board) player) 1
-    (= (state/detect-winning-row board) (if (= player "X") "O" "X")) -1
-    (empty? (get-available-moves board)) 0
+    (= winner player) 1
+    (= winner (if (= player "X") "O" "X")) -1
+    (empty? available-moves) 0
     :else 0))
 
 (defn minimax
-  "Minimax is a recursive algorithm that assesses a current board-state, and
-    applies scores of either nil to each one (location),indicating the game will 
-    progress, or otherwise declaring a winner. If a score 1 or -1 is returned,
-    a position is not returned."
+  "(minimax) is a recursive algorithm that assesses a current board-state and determines 
+    the optimal move. Returns [score [move]] where score indicates the position value 
+    and move is the [row col] of the best move."
   [board player depth]
-  (let [winner (state/detect-winning-row board)]
+  (let [winner (state/detect-winning-row board)
+        available-moves (get-available-moves board)]
     (if (or (zero? depth)
             winner
-            (empty? (get-available-moves board)))
-      [(evaluate-position board player) nil]
-      (let [available-moves (get-available-moves board)
-            scores-and-moves (for [[row col] available-moves]
+            (empty? available-moves))
+      [(evaluate-position player winner available-moves) nil]
+      (let [scores-and-moves (for [[row col] available-moves]
                                (let [new-board (state/update-board-state board row col player)
                                      [score _] (minimax new-board
                                                         (if (= player "X") "O" "X")
@@ -43,10 +41,10 @@
         (apply max-key first scores-and-moves)))))
 
 (defn compute-next-game-state
-  "This function calls the evaluate-and-update-game function, which will first take
-   the player's input and update the game-state with their validated input. Minimax
-   is called to caculate and the best move for the computer to execute. It returns
-   the move that the ai made destructured into a row and column so that "
+  "This function calls the (evaluate-and-update-game) function, which will first take the 
+    player's input and update the game-state with their validated input. (minimax) is called 
+    to caculate and the best move for the computer to execute. These are provided to
+    (evaluate-and-update-game)"
   [current-state input]
   (state/evaluate-and-update-game current-state
                                   (if (= (:current-player current-state) "X")
@@ -55,7 +53,10 @@
                                       [ai-row ai-col]))))
 
 (defn process-turn
-  "Takes the current game state and a move, returns the new game state"
+  "Processes a single turn in the game. Takes the current game state and a move - a move by 
+    the player or by the computer - validates the move, updates the board, and handles the 
+    AI response if needed. Returns a map with {:status (:invalid or :continue), and :state 
+    (the new or unchanged game state)}."
   [current-state move]
   (let [{:keys [state next-state]} (compute-next-game-state current-state move)]
     (case state

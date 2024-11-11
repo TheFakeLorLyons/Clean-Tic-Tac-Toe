@@ -1,7 +1,8 @@
 (ns tic-tac-cloj.tests.state-tests
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.state :as state]
-            [tic-tac-cloj.ai :as ai]))
+            [tic-tac-cloj.ai :as ai]
+            [tic-tac-cloj.console :as console]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Basic Testing             ;
@@ -25,6 +26,7 @@
         (is (= (get-in (state/update-board-state empty-board 0 0 "X") [0 0]) "X"))
         (is (= (state/update-board-state (state/update-board-state empty-board 0 0 "X") 0 0 "O")
                (state/update-board-state empty-board 0 0 "X")))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;        check-winner Testing         ;
@@ -188,7 +190,6 @@
                                       [" " " " " "]] 0 2 "X")))))
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;   evaluate-and-update-game testing  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -241,5 +242,28 @@
                  :stats {:wins 1 :losses 1 :draws 0}}
           result (state/evaluate-and-update-game state [0 0])]
       (is (= (:stats state) (get-in result [:next-state :stats]))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;    handle-game-completion testing   ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest handle-game-completion-test
+  (testing "Game should continue when 8 moves made but no winner"
+    (let [current-state {:board [["X" "O" "X"]
+                                ["O" "X" "O"]
+                                ["O" "X" ""]]
+                        :moves-made 8}
+          result (state/handle-game-completion current-state)]
+      (is (= :continue (:status result)))))
+
+  (testing "Stats should accumulate correctly across multiple games"
+    (with-redefs [console/handle-game-over-state (fn [_] [{:wins 5 :losses 3 :draws 2} false])]
+      (let [current-state {:board [["X" "X" "X"]
+                                  ["O" "O" ""]
+                                  ["" "" ""]]
+                          :moves-made 5
+                          :stats {:wins 4 :losses 3 :draws 2}}
+            result (state/handle-game-completion current-state)]
+        (is (= {:wins 5 :losses 3 :draws 2} (:stats result)))))))
 
 (run-tests)

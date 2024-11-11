@@ -1,0 +1,19 @@
+%% XD Flowchart (Welcome and Setup Logic)
+flowchart TD
+    Start([Start]) --> Welcome[Print Welcome]
+    Welcome --> GetName[Get Player Name]
+    GetName --> InitBoard[Initialize Board]
+    InitBoard --> GameLoop[Print Current Board]
+    GameLoop --> CheckGame{Check Game State}
+    CheckGame -->|Game Over| EndGame[Handle Game Over]
+    CheckGame -->|Continue| WhoseTurn{Player Turn?}
+    WhoseTurn -->|X| GetInput[Get Player Input]
+    WhoseTurn -->|O| CalcMove[Calculate AI Move]
+    GetInput --> ValidMove{Valid Move?}
+    CalcMove --> UpdateBoard[Update Board]
+    ValidMove -->|Yes| UpdateBoard
+    ValidMove -->|No| GameLoop
+    UpdateBoard --> GameLoop
+    EndGame --> PlayAgain{Play Again?}
+    PlayAgain -->|Yes| InitBoard
+    PlayAgain -->|No| End([End])

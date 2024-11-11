@@ -33,7 +33,8 @@
 (defn check-game-over 
   "This function takes the current state of the game and evaluates if there is a winner
    first by calling the check-winner function, and subsequently in the event that there
-   have been 9 moves completed."
+   have been 9 moves completed. Returns a map containing the appropriate {:state and 
+   :next-state} back to the calling function."
   [current-state]
   (let [{:keys [board moves-made]} current-state
         winner (detect-winning-row board)]
@@ -58,10 +59,11 @@
     board))
 
 (defn evaluate-and-update-game
-  "Responsible for taking the user input and validating it agains the model for input 
-      provided via valid-input?. Calls make-move, which is shared between the human and AI.
-   Responsible for the computer's turn. Calls minimax to determine the most appropriate move 
-      and make move to update the board state."
+  "Assesses submitted moves from both the player and the computer to see if the submitted
+    move is legal and moves the game forward with the updated board state, passing back
+    either the :continue mapped to key and updated board into :next-state, otherwise if
+    the entry was invalid, it returns back the same state, indicating that the spot was
+    already taken."
   [current-state [row col]]
   (let [{:keys [board current-player]} current-state
         new-board (update-board-state board row col current-player)]
@@ -75,11 +77,14 @@
                        (assoc :current-player (if (= current-player "X") "O" "X")))})))
 
 (defn handle-game-completion
-  "Processes end-game state and determines if game should continue"
+  "Calls check-game-over to see whether a legal winning row has been placed, or if the
+    game has reached 9 turns of play. If it has met :game-over conditions, it will call
+    handle-game-over state appropriately, or return a map passing control back the same
+    way that it received it."
   [current-state]
   (if-let [{:keys [next-state]} (check-game-over current-state)]
     (let [[new-stats play-again?] (console/handle-game-over-state next-state)]
       {:status (if play-again? :restart :quit)
        :stats new-stats})
     {:status :continue
-     :state current-state}))
+     :state current-state}))90

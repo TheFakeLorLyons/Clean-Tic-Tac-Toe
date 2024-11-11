@@ -47,7 +47,6 @@
     (is (false? (console/valid-input? nil)) "Should reject nil input")))
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;      get-valid-input-testing        ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,7 +62,7 @@
       (with-redefs [read-line #(let [next-input (first @inputs)]
                                  (swap! inputs rest)
                                  next-input)
-                    println identity]  ; Suppress output during test
+                    println identity]
         (is (= 2 (console/get-valid-input "Enter a number:" console/valid-input?))
             "Should return 2 after receiving invalid inputs"))))
 
