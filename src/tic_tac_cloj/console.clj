@@ -1,7 +1,9 @@
 (ns tic-tac-cloj.console
   (:require [clojure.string :refer [blank?]]))
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;             console input           ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn valid-input? [input]
   (try
@@ -20,12 +22,14 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
-(defn handle-player-turn []
+(defn obtain-player-input []
   (let [row (get-valid-input "\nEnter your row [0, 1, 2]:" valid-input?)
         col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
     [row col]))
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;            console output           ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def title
   (str "======================\n"
@@ -36,6 +40,13 @@
   []
   (println title)
   (println " Enter your REAL name"))
+
+(defn welcome!
+  []
+  (print-heading)
+  (let [player-name (read-line)]
+    (println (str "Okay " player-name ", welcome to the game!"))
+    player-name))
 
 (defn print-board-and-moves
   [board moves-made?]
@@ -86,7 +97,7 @@
   [is-final?]
   (if is-final?
     (println "\nThanks for playing!\n")
-    (println "Current Stats: ")))
+    (println "\nCurrent Stats: ")))
 
 (defn print-end-of-game-stats
   [stats]

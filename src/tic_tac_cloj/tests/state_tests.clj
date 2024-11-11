@@ -32,44 +32,44 @@
 
 (deftest check-winner-tests
   (testing "Horizontal win detection"
-    (is (= "X" (state/check-winner [["X" "X" "X"]
-                                    [" " "O" " "]
-                                    ["O" " " " "]])))
-    (is (= "O" (state/check-winner [[" " "X" " "]
-                                    ["O" "O" "O"]
-                                    ["X" " " "X"]])))
-    (is (= "X" (state/check-winner [[" " "O" " "]
-                                    ["O" " " " "]
-                                    ["X" "X" "X"]]))))
+    (is (= "X" (state/detect-winning-row [["X" "X" "X"]
+                                          [" " "O" " "]
+                                          ["O" " " " "]])))
+    (is (= "O" (state/detect-winning-row [[" " "X" " "]
+                                          ["O" "O" "O"]
+                                          ["X" " " "X"]])))
+    (is (= "X" (state/detect-winning-row [[" " "O" " "]
+                                          ["O" " " " "]
+                                          ["X" "X" "X"]]))))
 
   (testing "Vertical win detection"
-    (is (= "X" (state/check-winner [["X" "O" " "]
-                                    ["X" "O" " "]
-                                    ["X" " " " "]])))
-    (is (= "O" (state/check-winner [["X" "O" " "]
-                                    [" " "O" "X"]
-                                    ["X" "O" " "]]))))
+    (is (= "X" (state/detect-winning-row [["X" "O" " "]
+                                          ["X" "O" " "]
+                                          ["X" " " " "]])))
+    (is (= "O" (state/detect-winning-row [["X" "O" " "]
+                                          [" " "O" "X"]
+                                          ["X" "O" " "]]))))
 
   (testing "Diagonal win detection"
-    (is (= "X" (state/check-winner [["X" "O" " "]
-                                    ["O" "X" " "]
-                                    [" " " " "X"]])))
-    (is (= "O" (state/check-winner [["X" " " "O"]
-                                    [" " "O" "X"]
-                                    ["O" " " "X"]]))))
+    (is (= "X" (state/detect-winning-row [["X" "O" " "]
+                                          ["O" "X" " "]
+                                          [" " " " "X"]])))
+    (is (= "O" (state/detect-winning-row [["X" " " "O"]
+                                          [" " "O" "X"]
+                                          ["O" " " "X"]]))))
 
   (testing "No winner detection"
-    (is (nil? (state/check-winner [[" " " " " "]
-                                   [" " " " " "]
-                                   [" " " " " "]])))
-    (is (nil? (state/check-winner [["X" "O" "X"]
-                                   ["O" "X" "O"]
-                                   ["O" "X" "O"]]))))
+    (is (nil? (state/detect-winning-row [[" " " " " "]
+                                         [" " " " " "]
+                                         [" " " " " "]])))
+    (is (nil? (state/detect-winning-row [["X" "O" "X"]
+                                         ["O" "X" "O"]
+                                         ["O" "X" "O"]]))))
 
   (testing "Draw game detection"
-    (is (nil? (state/check-winner [["X" "O" "X"]
-                                   ["X" "O" "O"]
-                                   ["O" "X" "X"]])))))
+    (is (nil? (state/detect-winning-row [["X" "O" "X"]
+                                         ["X" "O" "O"]
+                                         ["O" "X" "X"]])))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -187,8 +187,10 @@
                                       [" " " " " "]
                                       [" " " " " "]] 0 2 "X")))))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;      state/evaluate-and-update-game testing        ;
+                                        ;   evaluate-and-update-game testing  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest handle-move-tests

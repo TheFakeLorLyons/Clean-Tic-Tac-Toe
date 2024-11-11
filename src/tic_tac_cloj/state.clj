@@ -1,4 +1,5 @@
-(ns tic-tac-cloj.state)
+(ns tic-tac-cloj.state
+  (:require [tic-tac-cloj.console :as console]))
 
 (def board-state
   {:board [[" " " " " "]
@@ -9,12 +10,10 @@
    :player-name nil
    :current-player "X"})
 
-(def game-state (atom board-state))
-
 (defn legal-move? [row col board]
   (clojure.string/blank? (get-in board [row col])))
 
-(defn check-winner
+(defn detect-winning-row
   "This part of the algorithm reviews the state of the board, iterating through
     all rows, and finally the diagnal axis of the board, determining whether 
     there are any filled lines across any one of 8 axis. If so it will return
@@ -31,19 +30,19 @@
               (first line)))
           all-lines)))
 
-(defn check-game-over [current-state]
+(defn check-game-over 
   "This function takes the current state of the game and evaluates if there is a winner
    first by calling the check-winner function, and subsequently in the event that there
    have been 9 moves completed."
+  [current-state]
   (let [{:keys [board moves-made]} current-state
-        winner (check-winner board)]
+        winner (detect-winning-row board)]
     (cond
       winner
       {:state :game-over
        :next-state (-> current-state
                        (assoc :winner winner)
                        (update :stats #(update % (if (= winner "X") :wins :losses) inc)))}
-
       (>= moves-made 9)
       {:state :game-over
        :next-state (-> current-state
@@ -61,7 +60,7 @@
 (defn evaluate-and-update-game
   "Responsible for taking the user input and validating it agains the model for input 
       provided via valid-input?. Calls make-move, which is shared between the human and AI.
-Responsible for the computer's turn. Calls minimax to determine the most appropriate move 
+   Responsible for the computer's turn. Calls minimax to determine the most appropriate move 
       and make move to update the board state."
   [current-state [row col]]
   (let [{:keys [board current-player]} current-state
@@ -74,3 +73,13 @@ Responsible for the computer's turn. Calls minimax to determine the most appropr
                        (assoc :board new-board)
                        (update :moves-made inc)
                        (assoc :current-player (if (= current-player "X") "O" "X")))})))
+
+(defn handle-game-completion
+  "Processes end-game state and determines if game should continue"
+  [current-state]
+  (if-let [{:keys [next-state]} (check-game-over current-state)]
+    (let [[new-stats play-again?] (console/handle-game-over-state next-state)]
+      {:status (if play-again? :restart :quit)
+       :stats new-stats})
+    {:status :continue
+     :state current-state}))
