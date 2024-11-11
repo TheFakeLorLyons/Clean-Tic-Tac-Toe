@@ -1,0 +1,25 @@
+%% TD Flowchart (Main Game Logic)
+flowchart TD
+    A[Start Game] --> B[Initialize Board State]
+    B --> C{Main Game Loop}
+    C --> D[Print Current Board]
+    D --> E[Check Game Completion]
+    E -->|Game Over| F[Handle End Game]
+    F -->|Play Again| B
+    F -->|Quit| Z[End Game]
+    E -->|Continue| G{Current Player?}
+    G -->|Player X| H[Get Player Input]
+    G -->|Player O| I[Calculate AI Move]
+    H --> J[Process Turn]
+    I --> J
+    J -->|Invalid Move| D
+    J -->|Valid Move| K[Update Game State]
+    K --> C
+
+    subgraph AI Logic
+    I --> M[Minimax Algorithm]
+    M --> N[Evaluate Position]
+    N --> O[Get Available Moves]
+    O --> M
+    end
+    
