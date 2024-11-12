@@ -10,9 +10,6 @@
    :player-name nil
    :current-player "X"})
 
-(defn legal-move? [row col board]
-  (clojure.string/blank? (get-in board [row col])))
-
 (defn detect-winning-row
   "This part of the algorithm reviews the state of the board, iterating through
     all rows, and finally the diagnal axis of the board, determining whether 
@@ -54,9 +51,7 @@
   "Update-board-state functions by taking appropriate symbol ('X' or 'O') into the 
     appropriate spot in the state vectors for both the player and computer."
   [board row col player]
-  (if (legal-move? row col board)
-    (assoc-in board [row col] player)
-    board))
+    (assoc-in board [row col] player))
 
 (defn evaluate-and-update-game
   "Assesses submitted moves from both the player and the computer to see if the submitted
@@ -75,16 +70,3 @@
                        (assoc :board new-board)
                        (update :moves-made inc)
                        (assoc :current-player (if (= current-player "X") "O" "X")))})))
-
-(defn handle-game-completion
-  "Calls check-game-over to see whether a legal winning row has been placed, or if the
-    game has reached 9 turns of play. If it has met :game-over conditions, it will call
-    handle-game-over state appropriately, or return a map passing control back the same
-    way that it received it."
-  [current-state]
-  (if-let [{:keys [next-state]} (check-game-over current-state)]
-    (let [[new-stats play-again?] (console/handle-game-over-state next-state)]
-      {:status (if play-again? :restart :quit)
-       :stats new-stats})
-    {:status :continue
-     :state current-state}))90

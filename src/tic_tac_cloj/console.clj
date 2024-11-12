@@ -22,10 +22,15 @@
           (println "Invalid input. Please try again.")
           (recur))))))
 
-(defn obtain-player-input []
-  (let [row (get-valid-input "\nEnter your row [0, 1, 2]:" valid-input?)
-        col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
-    [row col]))
+(defn obtain-player-input [current-state]
+  (loop []
+    (let [row (get-valid-input "\nEnter your row [0, 1, 2]:" valid-input?)
+          col (get-valid-input "Enter your column [0, 1, 2]:" valid-input?)]
+      (if (clojure.string/blank? (get-in (:board current-state) [row col]))
+        [row col]
+        (do
+          (println "Invalid move! Spot already taken!")
+          (recur))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

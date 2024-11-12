@@ -5,11 +5,10 @@
   "Iterate through the 'open' board positions and return a destructured array
     of available positions based on their grid coordinates."
   [board]
-  (->> (for [row (range (count board))
-             col (range (count (first board)))]
-         (when (state/legal-move? row col board)
-           [row col]))
-       (remove nil?)))
+  (for [row (range 3)
+        col (range 3)
+        :when (clojure.string/blank? (get-in board [row col]))]
+    [row col]))
 
 (defn evaluate-position
   "This function applies a score to the potential move being evaluated. A score
@@ -51,16 +50,3 @@
                                     input  ;Player's move
                                     (let [[_ [ai-row ai-col]] (minimax (:board current-state) "O" 9)]
                                       [ai-row ai-col]))))
-
-(defn process-turn
-  "Processes a single turn in the game. Takes the current game state and a move - a move by 
-    the player or by the computer - validates the move, updates the board, and handles the 
-    AI response if needed. Returns a map with {:status (:invalid or :continue), and :state 
-    (the new or unchanged game state)}."
-  [current-state move]
-  (let [{:keys [state next-state]} (compute-next-game-state current-state move)]
-    (case state
-      :invalid-move {:status :invalid
-                     :state current-state}
-      :continue {:status :continue
-                 :state next-state})))
