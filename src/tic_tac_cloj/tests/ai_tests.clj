@@ -1,6 +1,7 @@
 (ns tic-tac-cloj.tests.ai-tests
   (:require [clojure.test :refer :all]
-            [tic-tac-cloj.ai :as ai]))
+            [tic-tac-cloj.ai :as ai]
+            [tic-tac-cloj.main :as main]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;    get-available-moves Testing      ;
@@ -233,7 +234,7 @@
                                  ["" "" ""]]
                          :current-player "X"
                          :moves-made 0}
-          result (ai/process-turn initial-state [0 0])]
+          result (main/process-turn initial-state [0 0])]
       (is (= :continue (:status result)))
       (is (= "X" (get-in (:state result) [:board 0 0])))))
 
@@ -243,7 +244,7 @@
                                  ["" "" ""]]
                          :current-player "X"
                          :moves-made 1}
-          result (ai/process-turn initial-state [0 0])]
+          result (main/process-turn initial-state [0 0])]
       (is (= :invalid (:status result)))
       (is (= initial-state (:state result)))))
 
@@ -253,7 +254,7 @@
                                  ["" "" ""]]
                          :current-player "X"
                          :moves-made 2}
-          result (ai/process-turn initial-state [1 1])]
+          result (main/process-turn initial-state [1 1])]
       (is (= :continue (:status result)))
       (is (= 3 (:moves-made (:state result))))))
 
@@ -263,7 +264,7 @@
                                  ["" "" ""]]
                          :current-player "X"
                          :moves-made 0}
-          result (ai/process-turn initial-state [0 0])]
+          result (main/process-turn initial-state [0 0])]
       (is (= 1 (:moves-made (:state result))))))
 
   (testing "Current player alternates after valid move"
@@ -272,7 +273,7 @@
                                  ["" "" ""]]
                          :current-player "X"
                          :moves-made 0}
-          result (ai/process-turn initial-state [0 0])]
+          result (main/process-turn initial-state [0 0])]
       (is (= "O" (:current-player (:state result))))))
 
   (testing "Board state remains unchanged after invalid move"
@@ -282,7 +283,7 @@
           initial-state {:board initial-board
                          :current-player "X"
                          :moves-made 5}
-          result (ai/process-turn initial-state [0 0])]
+          result (main/process-turn initial-state [0 0])]
       (is (= initial-board (:board (:state result))))))
 
   (testing "Valid move on nearly full board"
@@ -291,7 +292,7 @@
                                  ["O" "X" ""]]
                          :current-player "X"
                          :moves-made 8}
-          result (ai/process-turn initial-state [2 2])]
+          result (main/process-turn initial-state [2 2])]
       (is (= :continue (:status result)))
       (is (= "X" (get-in (:state result) [:board 2 2]))))))
 

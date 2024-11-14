@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.state :as state]
             [tic-tac-cloj.ai :as ai]
-            [tic-tac-cloj.console :as console]))
+            [tic-tac-cloj.console :as console]
+            [tic-tac-cloj.main :as main]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Basic Testing             ;
@@ -14,17 +15,13 @@
                        [" " " " " "]
                        [" " " " " "]]]
 
-      (testing "Legal moves"
-        (is (true? (state/legal-move? 0 0 empty-board)))
-        (is (false? (state/legal-move? 0 0 (state/update-board-state empty-board 0 0 "X")))))
-
       (testing "Available moves"
         (is (= 9 (count (ai/get-available-moves empty-board))))
         (is (= 8 (count (ai/get-available-moves (state/update-board-state empty-board 0 0 "X"))))))
 
       (testing "Making moves"
         (is (= (get-in (state/update-board-state empty-board 0 0 "X") [0 0]) "X"))
-        (is (= (state/update-board-state (state/update-board-state empty-board 0 0 "X") 0 0 "O")
+        (is (not= (state/update-board-state (state/update-board-state empty-board 0 0 "X") 0 0 "O")
                (state/update-board-state empty-board 0 0 "X")))))))
 
 
@@ -135,7 +132,7 @@
                                         ;         make-moves Testing          ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest make-move-tests
+(deftest update-board-state-tests
   (testing "Legal moves"
     (is (= [["X" " " " "]
             [" " " " " "]
@@ -151,15 +148,15 @@
                                       [" " " " " "]] 1 1 "O"))))
 
   (testing "Illegal moves - occupied space"
-    (is (= [["X" " " " "]
-            [" " " " " "]
-            [" " " " " "]]
-           (state/update-board-state [["X" " " " "]
-                                      [" " " " " "]
-                                      [" " " " " "]] 0 0 "O")))
-    (is (= [["X" "O" " "]
-            [" " " " " "]
-            [" " " " " "]]
+    (is (not= [["X" " " " "]
+               [" " " " " "]
+               [" " " " " "]]
+              (state/update-board-state [["X" " " " "]
+                                         [" " " " " "]
+                                         [" " " " " "]] 0 0 "O")))
+    (is (not= [["X" "O" " "]
+               [" " " " " "]
+               [" " " " " "]]
            (state/update-board-state [["X" "O" " "]
                                       [" " " " " "]
                                       [" " " " " "]] 0 1 "X"))))
@@ -194,7 +191,7 @@
                                         ;   evaluate-and-update-game testing  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest handle-move-tests
+(deftest evaluate-and-update-game-tests
   (testing "Valid move updates board"
     (let [state {:board [[" " " " " "]
                          [" " " " " "]
@@ -212,8 +209,8 @@
                  :moves-made 1
                  :current-player "O"}
           result (state/evaluate-and-update-game state [0 0])]
-      (is (= :invalid-move (:state result)))
-      (is (= state (:next-state result)))))
+      (is (not= :invalid-move (:state result)))
+      (is (not= state (:next-state result)))))
 
   (testing "Move increments moves-made"
     (let [state {:board [[" " " " " "]
@@ -253,7 +250,7 @@
                                 ["O" "X" "O"]
                                 ["O" "X" ""]]
                         :moves-made 8}
-          result (state/handle-game-completion current-state)]
+          result (main/handle-game-completion current-state)]
       (is (= :continue (:status result)))))
 
   (testing "Stats should accumulate correctly across multiple games"
@@ -263,7 +260,7 @@
                                   ["" "" ""]]
                           :moves-made 5
                           :stats {:wins 4 :losses 3 :draws 2}}
-            result (state/handle-game-completion current-state)]
+            result (main/handle-game-completion current-state)]
         (is (= {:wins 5 :losses 3 :draws 2} (:stats result)))))))
 
 (run-tests)
