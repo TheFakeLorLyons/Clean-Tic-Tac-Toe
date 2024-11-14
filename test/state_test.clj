@@ -1,4 +1,4 @@
-(ns tic-tac-cloj.tests.state-tests
+(ns state-test
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.state :as state]
             [tic-tac-cloj.ai :as ai]

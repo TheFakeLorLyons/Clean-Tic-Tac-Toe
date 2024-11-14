@@ -1,4 +1,4 @@
-(ns tic-tac-cloj.tests.console-tests
+(ns console-test
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.console :as console]))
 

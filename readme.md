@@ -4,6 +4,10 @@ Goal: Make a Tic-Tac-Toe console application in any programming language I desir
 
 This project is designed to demonstrate the implementation of Tic-Tac-Toe as a console-based game in Clojure, with features such as player vs. computer gameplay, move validation, and statistics tracking.
 
+### __Recent Testing Update__
+
+- ✅ I incorporated the Cognitect test runner so now all of the tests can be run via the command clj -M:test
+
 ### __MVP Goals__
   
 The minimum viable product (MVP) for this project includes the following features:

@@ -1,4 +1,4 @@
-(ns tic-tac-cloj.tests.ai-tests
+(ns ai-test
   (:require [clojure.test :refer :all]
             [tic-tac-cloj.ai :as ai]
             [tic-tac-cloj.main :as main]))

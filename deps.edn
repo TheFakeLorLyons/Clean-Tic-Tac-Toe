@@ -1,6 +1,11 @@
 {:paths ["src"]
  :deps {}
- :aliases {:flowstorm-local {:classpath-overrides {org.clojure/clojure nil}
+ :aliases {:test {:extra-paths ["test"]
+                  :extra-deps {io.github.cognitect-labs/test-runner
+                               {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                  :main-opts ["-m" "cognitect.test-runner"]
+                  :exec-fn cognitect.test-runner.api/test}
+           :flowstorm-local {:classpath-overrides {org.clojure/clojure nil}
                              :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
                                           com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.4"}}
                              :jvm-opts ["-Dflowstorm.startRecording=false"
