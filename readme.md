@@ -6,7 +6,9 @@ This project is designed to demonstrate the implementation of Tic-Tac-Toe as a c
 
 ### __Recent Testing Update__
 
-- ✅ I incorporated the Cognitect test runner so now all of the tests can be run via the command clj -M:test
+- ✅ I incorporated the Cognitect test runner so now all of the tests can be run via the command in the terminal.
+
+`clj -M:test`
 
 ### __MVP Goals__
   
