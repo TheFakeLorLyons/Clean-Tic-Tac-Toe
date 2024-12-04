@@ -46,12 +46,12 @@ will be stored locally for the time being, with DB storage an optional future go
 
 2. Clone this repository to your local machine:
 
-3. git clone https://github.com/your-username/tic-tac-toe.git
+3. git clone https://github.com/TheFakeLorLyons/tic-tac-toe.git
 
-4. cd tic-tac-toe
+4. cd Clean-Tic-Tac-Toe (if necessary)
 
 5. Run the game using:
-    - clojure -m tic-tac-toe.core
+    - clojure -m tic-tac-cloj.main
     - This will start the Tic-Tac-Toe game in your terminal.
     - Alternatively, you can jack into your REPL and evaluate the main function
       to begin.
